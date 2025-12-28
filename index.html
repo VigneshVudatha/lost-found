@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lost & Found | Find What Matters</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<!-- Leaflet JS -->
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+</head>
+
+<body>
+  <!-- MODERN NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <div class="navbar-brand">
+        <h1 class="app-logo">Lost & Found</h1>
+        <p class="app-tagline">Find what matters</p>
+      </div>
+      
+      <div class="navbar-menu">
+        <button onclick="showSection('home')" class="nav-link active">Home</button>
+      <button onclick="openProtectedSection('lost')" class="nav-link">Report Lost</button>
+        <button onclick="openProtectedSection('found')" class="nav-link">Report Found</button>
+        <button onclick="showSection('view'); loadItems();" class="nav-link">View Items</button>
+      </div>
+
+      <div class="navbar-auth">
+  <span id="pointsDisplay" class="points hidden">⭐ Points: 0</span>
+
+  
+  <!-- Account Icon -->
+  <div id="accountIcon" class="account-icon hidden" onclick="openProfile()">
+    👤
+  </div>
+
+  <button onclick="showSection('auth')" class="nav-link" id="loginBtn">Login</button>
+  <button onclick="logout()" class="nav-link hidden" id="logoutBtn">Logout</button>
+</div>
+
+
+    </div>
+  </nav>
+
+  <main class="main-container">
+    <!-- AUTH -->
+    <section id="auth" class="section hidden" aria-labelledby="auth-title">
+      <div class="auth-wrapper">
+        <div class="auth-card">
+          <h2 id="auth-title">Welcome Back</h2>
+          <p class="auth-subtitle">Login or create an account to continue</p>
+          <div class="auth-form">
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+            </div>
+            <div class="auth-actions">
+              <button onclick="login()" type="button" class="btn btn-primary btn-lg">Login</button>
+              <button onclick="signup()" type="button" class="btn btn-secondary btn-lg">Create Account</button>
+            </div>
+            <p id="authMessage" class="msg" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOME -->
+    <section id="home" class="section">
+      <div class="hero-section">
+        <h2>Find Lost Items Easily</h2>
+        <p class="hero-subtitle">Report lost or found items in your community and help reunite people with what matters</p>
+        <div class="hero-actions">
+          <button onclick="openProtectedSection('lost')" class="btn btn-primary btn-lg">Report Lost Item</button>
+          <button onclick="showSection('view'); loadItems();" class="btn btn-outline btn-lg">Browse Items</button>
+        </div>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon lost-icon">📍</div>
+          <h3>Report Lost</h3>
+          <p>Describe your lost item with location and contact details</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon found-icon">✓</div>
+          <h3>Report Found</h3>
+          <p>Found something? Help reunite it with its owner</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Search & Find</h3>
+          <p>Browse all lost and found items in real-time</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOST FORM -->
+    <section id="lost" class="section hidden" aria-labelledby="lost-title">
+      <div class="form-wrapper">
+        <div class="form-card">
+          <h2 id="lost-title">Report a Lost Item</h2>
+          <p class="form-subtitle">Help us find your lost item by providing details</p>
+          <div class="form">
+            <div class="form-group">
+              <label for="lost-item">Item Name *</label>
+              <input id="lost-item" type="text" placeholder="e.g., Black Wallet" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="lost-category">Category *</label>
+                <input id="lost-category" type="text" placeholder="e.g., Accessories" />
+              </div>
+              <div class="form-group">
+                <label for="lost-contact">Contact Number (Optional)</label>
+
+                <input id="lost-contact" type="tel" placeholder="+1 (555) 000-0000" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="lost-location">Location Lost *</label>
+              <input id="lost-location" type="text" placeholder="e.g., Downtown Coffee Shop" />
+            </div>
+            <div class="form-group">
+  <label>Select Exact Location on Map *</label>
+  <div id="lostMap" style="height:300px;border-radius:12px;"></div>
+  <small>Click on the map to mark where the item was lost</small>
+</div>
+
+            <div class="form-group">
+  <label for="lostImage">Upload Image</label>
+  <img id="lostPreview" class="preview-image hidden">
+  <input type="file" id="lostImage" accept="image/*">
+  <!-- Upload Image -->
+
+</div>
+
+            <div class="form-group">
+              <label for="lost-desc">Description</label>
+              <textarea id="lost-desc" placeholder="Additional details about your item..."></textarea>
+            </div>
+            <div class="actions">
+              <button id="submit-lost" type="button" class="btn btn-primary btn-lg">Submit Report</button>
+              <button type="button" class="btn btn-secondary" onclick="showSection('view')">View Items</button>
+            </div>
+            <p id="lost-msg" class="msg" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOUND FORM -->
+    <section id="found" class="section hidden" aria-labelledby="found-title">
+      <div class="form-wrapper">
+        <div class="form-card">
+          <h2 id="found-title">Report a Found Item</h2>
+          <p class="form-subtitle">Help reunite a lost item with its owner</p>
+          <div class="form">
+            <div class="form-group">
+              <label for="found-item">Item Name *</label>
+              <input id="found-item" type="text" placeholder="e.g., Blue Umbrella" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="found-category">Category *</label>
+                <input id="found-category" type="text" placeholder="e.g., Accessories" />
+              </div>
+              <div class="form-group">
+                <label for="found-contact">Your Contact (Optional)</label>
+                <input id="found-contact" type="tel" placeholder="+1 (555) 000-0000" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="found-location">Location Found *</label>
+              <input id="found-location" type="text" placeholder="e.g., Downtown Coffee Shop" />
+            </div>
+            <div class="form-group">
+  <label>Select Exact Location on Map *</label>
+  <div id="foundMap" style="height:300px;border-radius:12px;"></div>
+  <small>Click on the map to mark where the item was found</small>
+</div>
+
+<div class="form-group">
+  <label for="foundImage">Upload Image</label>
+  <input type="file" id="foundImage" accept="image/*">
+  <img id="foundPreview" class="preview-image hidden">
+
+</div>
+
+
+            <div class="form-group">
+              <label for="found-desc">Description</label>
+              <textarea id="found-desc" placeholder="Additional details about the item..."></textarea>
+            </div>
+            <div class="actions">
+              <button id="submit-found" type="button" class="btn btn-primary btn-lg">Submit Report</button>
+              <button type="button" class="btn btn-secondary" onclick="showSection('view')">View Items</button>
+            </div>
+            <p id="found-msg" class="msg" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW ITEMS -->
+    <section id="view" class="section hidden" aria-labelledby="view-title">
+      <div class="view-wrapper">
+        <h2 id="view-title">Browse All Items</h2>
+        
+        <div class="search-bar">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search by name, category, or location..."
+            
+          />
+        </div>
+
+        <div id="columns-root" class="columns" aria-live="polite"></div>
+        
+        <!-- Lost Items Section -->
+        <div class="items-section">
+          <div class="section-header">
+            <h3><span class="lost-badge">●</span> Lost Items</h3>
+          </div>
+          <div id="lostItemsList" class="items-grid"></div>
+        </div>
+
+        <!-- Found Items Section -->
+        <div class="items-section">
+          <div class="section-header">
+            <h3><span class="found-badge">●</span> Found Items</h3>
+          </div>
+          <div id="foundItemsList" class="items-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>&copy; </p>
+    </footer>
+    <!-- ================= PROFILE DASHBOARD ================= -->
+<section id="profile" class="section hidden">
+  <div class="profile-wrapper">
+
+    <div class="profile-card glass">
+
+      <div class="profile-header">
+        <div class="avatar">👤</div>
+        <button class="nav-link" onclick="showSection('profile')">
+  👤
+</button>
+
+        <div>
+          <h2 id="profileName">Username</h2>
+          <p id="profileEmail">email@example.com</p>
+        </div>
+      </div>
+
+      <div class="profile-stats">
+        <div class="stat">
+          <span id="profilePoints">0</span>
+          <label>⭐ Points</label>
+        </div>
+        <div class="stat">
+          <span id="profileItems">0</span>
+          <label>📦 Items</label>
+        </div>
+        <div class="stat">
+          <span id="profileChats">0</span>
+          <label>💬 Chats</label>
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <button class="btn btn-primary" onclick="showSection('view')">
+          View My Items
+        </button>
+        <button class="btn btn-outline" onclick="logout()">
+          Logout
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ===================================================== -->
+
+    <!-- ================= CHAT SECTION ================= -->
+<section id="chat" class="section hidden">
+  <div class="form-card">
+    <h2>🔒 Secure Chat</h2>
+    <p class="form-subtitle">
+      Chat is enabled only after image verification & approval
+    </p>
+
+    <div id="chatMessages" class="chat-messages"></div>
+    <input
+  type="text"
+  id="chatInput"
+  placeholder="Type your message..." />
+
+    <button class="btn btn-primary" onclick="sendMessage()">
+      Send
+    </button>
+    <button class="btn btn-outline" style="margin-top:10px;" onclick="reportChat()">
+  🚩 Report Conversation
+</button>
+
+  </div>
+</section>
+<!-- ================================================= -->
+
+  </main>
+
+  <script type="module" src="app.js"></script>
+  <div id="toast" class="toast hidden" aria-live="polite"></div>
+  
+
+</body>
+</html>
